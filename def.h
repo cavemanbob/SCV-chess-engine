@@ -3,6 +3,14 @@
 #define BitBoardSqNum 64
 
 #define StartFen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
+#define PiecesNames	"rnbqkpRNBQKP"
+
+//
+// 8 _1000 highest	black 
+// 7 _0000
+// 1 _0000 lowest  white
+//		abcd
+//
 
 typedef unsigned long long int u64;
 typedef unsigned int u32;

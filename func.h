@@ -40,7 +40,7 @@ void PrintBitBoard(u64 board){
 int BitCount(u64 bb){
 	int count =0;
 	for(int i=0;i<BitBoardSqNum; i++){
-		if(bb & 0b1) count++;
+		if(bb & 1ULL) count++;
 		bb= bb>>1;
 	}
 	return count;
@@ -209,9 +209,34 @@ void ApplyFen(const char* fen, struct board* LocalBoard){
 		
 	
 }
+int BitCheck(u64 bits, int cbit){
+	return ((1ULL << cbit) & bits) != 0ULL ? 1 : 0;
+}
 
 void ReadableBoard(struct board* fboard){
-	for(int i=0; i<8)
+	for(int i=8; i>0; i--){
+		printf("%d  ",i);
+		for(int j=8; j>0; j--){
+			int square = (i-1)*8 + j - 1;
+			if(BitCheck(fboard->occupy,square)){ // if square is occupied
+				if(BitCheck(fboard->wp,square))printf("P  ");
+				else if(BitCheck(fboard->wr,square))printf("R  ");
+				else if(BitCheck(fboard->wh,square))printf("N  ");
+				else if(BitCheck(fboard->wb,square))printf("B  ");
+				else if(BitCheck(fboard->wq,square))printf("Q  ");
+				else if(BitCheck(fboard->wk,square))printf("K  ");
+				else if(BitCheck(fboard->bp,square))printf("p  ");
+				else if(BitCheck(fboard->br,square))printf("r  ");
+				else if(BitCheck(fboard->bh,square))printf("n  ");
+				else if(BitCheck(fboard->bb,square))printf("b  ");
+				else if(BitCheck(fboard->bq,square))printf("q  ");
+				else if(BitCheck(fboard->bk,square))printf("k  ");
+			}
+			else printf(".  ");
+		}
+		printf("\n");
+	}
+	printf("\n   a  b  c  d  e  f  g  h\n");
 }
 
 
