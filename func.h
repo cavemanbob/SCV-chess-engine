@@ -26,8 +26,9 @@ void PrintBigTable(){
 }
 
 void PrintBitBoard(u64 board){ 
-	u64 k=0, l=0;
-	k= ~(~k >> 1); // perfect way to get u64 0b10000...
+	u64 k=1, l=0;
+//	k= ~(~k >> 1); // perfect way to get u64 0b10000...
+	k= k<<63; // 100..ULL another way 
 	for(int i=0; i<BitBoardSqNum; i++){
 		l= k & board;
 		(l!=0) ? printf("%3d",1): printf("%3d",0);
@@ -63,60 +64,72 @@ void ApplyFen(const char* fen, struct board* LocalBoard){
 			case 'r':
 				LocalBoard->br |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'n':
 				LocalBoard->bh |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'b':
 				LocalBoard->bb |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'q':
 				LocalBoard->bq |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'k':
 				LocalBoard->bk |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 			case 'p':
 				LocalBoard->bp |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 				//White pieces
 			case 'R':
 				LocalBoard->wr |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'N':
 				LocalBoard->wh |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'B':
 				LocalBoard->wb |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'Q':
 				LocalBoard->wq |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 
 			case 'K':
 				LocalBoard->wk |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;	
 			case 'P':
 				LocalBoard->wp |= 1ULL << (63- i);
 				LocalBoard->occupy |= 1ULL << (63- i);
+				LocalBoard->boccupy |= 1ULL << (63- i);
 				break;
 			default:
 				i+= *fen - '0' - 1; // -1 cuz every loop i is increasing already
@@ -238,8 +251,215 @@ void ReadableBoard(struct board* fboard){
 	}
 	printf("\n   a  b  c  d  e  f  g  h\n");
 }
+void CreateNewNode();
+void MoveAndDo(struct board fboard, int from, int to);
 
 
+void MoveGen(struct board* fboard){
+	// search move for white
+	if(fboard->side == 1){
+		for(int i=0; i<64; i++){
+			if(fboard->woccupy & (1ULL << (63 - i))){
+				// There are a white piece at 63-i
+				if(fboard->wp & (1ULL << (63 - i))){
+					//there are a white pawn
+					if(BigTable[BitToBig(i)-11]!=65 && (fboard->boccupy & 1ULL << (9+63-i)) ) MoveAndDo(fboard,63-i,9+63-i);
+					if(BigTable[BitToBig(i)-9]!=65 && (fboard->boccupy & 1ULL << (7+63-i)) ) MoveAndDo(fboard,63-i,7+63-i);
+					if(fboard->occupy & 1ULL << (8+63-i)) MoveAndDo(fboard,63-i,8+63-i);
+					if(i < 17 && fboard->occupy & 1ULL << (16+63-i)) MoveAndDo(fboard,63-i,16+63-i);
+				}
+				else if(fboard->wr & (1ULL << (63 - i)) || fboard->wq & (1ULL << (63 - i))){
+					//there are a white rook or queen
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*1]!=65 && (fboard->occupy & 1ULL << (-1*j+63-i))) MoveAndDo(fboard,63-i,-1*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*1]!=65 && (fboard->boccupy & 1ULL << (-1*j+63-i))) MoveAndDo(fboard,63-i,-1*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-1]!=65 && (fboard->occupy & 1ULL << (+1*j+63-i))) MoveAndDo(fboard,63-i,+1*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-1]!=65 && (fboard->boccupy & 1ULL << (+1*j+63-i))) MoveAndDo(fboard,63-i,+1*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*10]!=65 && (fboard->occupy & 1ULL << (-8*j+63-i))) MoveAndDo(fboard,63-i,-8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*10]!=65 && (fboard->boccupy & 1ULL << (-8*j+63-i))) MoveAndDo(fboard,63-i,-8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-10]!=65 && (fboard->occupy & 1ULL << (+8*j+63-i))) MoveAndDo(fboard,63-i,+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-10]!=65 && (fboard->boccupy & 1ULL << (+8*j+63-i))) MoveAndDo(fboard,63-i,+8*j+63-i);
+							break;
+						}
+					}
+				//end of rook
+				}
+				else if(fboard->wh & (1ULL << (63 - i))){
+					//there are a white knight
+					if(BigTable[BitToBig(i)-12]!=65 && !(fboard->woccupy & 1ULL << (10+63-i)) ) MoveAndDo(fboard,63-i,10+63-i);
+					if(BigTable[BitToBig(i)-21]!=65 && !(fboard->woccupy & 1ULL << (17+63-i)) ) MoveAndDo(fboard,63-i,17+63-i);
+					if(BigTable[BitToBig(i)-19]!=65 && !(fboard->woccupy & 1ULL << (15+63-i)) ) MoveAndDo(fboard,63-i,15+63-i);
+					if(BigTable[BitToBig(i)-8]!=65  && !(fboard->woccupy & 1ULL << (6+63-i)) ) MoveAndDo(fboard,63-i,6+63-i);
+					if(BigTable[BitToBig(i)+12]!=65 && !(fboard->woccupy & 1ULL << (-10+63-i)) ) MoveAndDo(fboard,63-i,-10+63-i);
+					if(BigTable[BitToBig(i)+21]!=65 && !(fboard->woccupy & 1ULL << (-17+63-i)) ) MoveAndDo(fboard,63-i,-17+63-i);
+					if(BigTable[BitToBig(i)+19]!=65 && !(fboard->woccupy & 1ULL << (-15+63-i)) ) MoveAndDo(fboard,63-i,-15+63-i);
+					if(BigTable[BitToBig(i)+8]!=65  && !(fboard->woccupy & 1ULL << (-6+63-i)) ) MoveAndDo(fboard,63-i,-6+63-i);
+				}
+				if(fboard->wb & (1ULL << (63 - i)) || fboard->wq & (1ULL << (63 - i))){ // there is a if not else if cuz to check queen (queen= rook + bishop)
+					//there are a white bishop	
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*1-10*j]!=65 && (fboard->occupy & 1ULL << (-1*j+8*j+63-i))) MoveAndDo(fboard,63-i,-1*j+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*1-10*j]!=65 && (fboard->boccupy & 1ULL << (-1*j+8*j+63-i))) MoveAndDo(fboard,63-i,-1*j+8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-1-10*j]!=65 && (fboard->occupy & 1ULL << (+1*j+8*j+63-i))) MoveAndDo(fboard,63-i,+1*j+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-1-10*j]!=65 && (fboard->boccupy & 1ULL << (+1*j+8*j+63-i))) MoveAndDo(fboard,63-i,+1*j+8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*10-j]!=65 && (fboard->occupy & 1ULL << (-8*j+j+63-i))) MoveAndDo(fboard,63-i,-8*j+j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*10-j]!=65 && (fboard->boccupy & 1ULL << (-8*j+j+63-i))) MoveAndDo(fboard,63-i,-8*j+j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-10+j]!=65 && (fboard->occupy & 1ULL << (+8*j-j+63-i))) MoveAndDo(fboard,63-i,+8*j-j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-10+j]!=65 && (fboard->boccupy & 1ULL << (+8*j-j+63-i))) MoveAndDo(fboard,63-i,+8*j-j+63-i);
+							break;
+						}
+					}
+					//end of bishop
+				}
+				else if(fboard->wk & (1ULL << (63 - i))){
+					//there are a white king
+					if(BigTable[BitToBig(i)-11]!=65 && !(fboard->woccupy & 1ULL << (9+63-i))) MoveAndDo(fboard, 63-i, 9+63-i);
+					if(BigTable[BitToBig(i)-10]!=65 && !(fboard->woccupy & 1ULL << (8+63-i))) MoveAndDo(fboard, 63-i, 8+63-i);
+					if(BigTable[BitToBig(i)-9]!=65  && !(fboard->woccupy & 1ULL << (7+63-i))) MoveAndDo(fboard, 63-i, 7+63-i);
+					if(BigTable[BitToBig(i)-1]!=65  && !(fboard->woccupy & 1ULL << (1+63-i))) MoveAndDo(fboard, 63-i, 1+63-i);
+					if(BigTable[BitToBig(i)+1]!=65  && !(fboard->woccupy & 1ULL << (-1+63-i))) MoveAndDo(fboard, 63-i, -1+63-i);
+					if(BigTable[BitToBig(i)+11]!=65 && !(fboard->woccupy & 1ULL << (-9+63-i))) MoveAndDo(fboard, 63-i, -9+63-i);
+					if(BigTable[BitToBig(i)+10]!=65 && !(fboard->woccupy & 1ULL << (-8+63-i))) MoveAndDo(fboard, 63-i, -8+63-i);
+					if(BigTable[BitToBig(i)+9]!=65  && !(fboard->woccupy & 1ULL << (-7+63-i))) MoveAndDo(fboard, 63-i, -7+63-i);
+				}
+			}
+		}
+	}
+	// search move for black
+	else{
+		for(int i=0; i<64; i++){
+			if(fboard->boccupy & (1ULL << (63 - i))){
+				// There are a black piece at 63-i 	
+				if(fboard->bp & (1ULL << (63 - i))){
+					//there are a black pawn
+					if(BigTable[BitToBig(i)+11]!=65 && (fboard->woccupy & 1ULL << (-9+63-i)) ) MoveAndDo(fboard,63-i,-9+63-i);
+					if(BigTable[BitToBig(i)+9]!=65 && (fboard->woccupy & 1ULL << (-7+63-i)) ) MoveAndDo(fboard,63-i,-7+63-i);
+					if(fboard->occupy & 1ULL << (-8+63-i)) MoveAndDo(fboard,63-i,-8+63-i);
+					if(i > 55 && fboard->occupy & 1ULL << (-16+63-i)) MoveAndDo(fboard,63-i,-16+63-i);
+				}
+				else if(fboard->br & (1ULL << (63 - i)) || fboard->bq & (1ULL << (63 - i))){
+					//there are a black rook or queen
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*1]!=65 && (fboard->occupy & 1ULL << (-1*j+63-i))) MoveAndDo(fboard,63-i,-1*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*1]!=65 && (fboard->woccupy & 1ULL << (-1*j+63-i))) MoveAndDo(fboard,63-i,-1*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-1]!=65 && (fboard->occupy & 1ULL << (+1*j+63-i))) MoveAndDo(fboard,63-i,+1*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-1]!=65 && (fboard->woccupy & 1ULL << (+1*j+63-i))) MoveAndDo(fboard,63-i,+1*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*10]!=65 && (fboard->occupy & 1ULL << (-8*j+63-i))) MoveAndDo(fboard,63-i,-8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*10]!=65 && (fboard->woccupy & 1ULL << (-8*j+63-i))) MoveAndDo(fboard,63-i,-8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-10]!=65 && (fboard->occupy & 1ULL << (+8*j+63-i))) MoveAndDo(fboard,63-i,+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-10]!=65 && (fboard->woccupy & 1ULL << (+8*j+63-i))) MoveAndDo(fboard,63-i,+8*j+63-i);
+							break;
+						}
+					}
+				//end of rook
+				}
+				else if(fboard->wh & (1ULL << (63 - i))){
+					//there are a black knight
+					if(BigTable[BitToBig(i)-12]!=65 && !(fboard->boccupy & 1ULL << (10+63-i)) ) MoveAndDo(fboard,63-i,10+63-i);
+					if(BigTable[BitToBig(i)-21]!=65 && !(fboard->boccupy & 1ULL << (17+63-i)) ) MoveAndDo(fboard,63-i,17+63-i);
+					if(BigTable[BitToBig(i)-19]!=65 && !(fboard->boccupy & 1ULL << (15+63-i)) ) MoveAndDo(fboard,63-i,15+63-i);
+					if(BigTable[BitToBig(i)-8]!=65  && !(fboard->boccupy & 1ULL << (6+63-i)) ) MoveAndDo(fboard,63-i,6+63-i);
+					if(BigTable[BitToBig(i)+12]!=65 && !(fboard->boccupy & 1ULL << (-10+63-i)) ) MoveAndDo(fboard,63-i,-10+63-i);
+					if(BigTable[BitToBig(i)+21]!=65 && !(fboard->boccupy & 1ULL << (-17+63-i)) ) MoveAndDo(fboard,63-i,-17+63-i);
+					if(BigTable[BitToBig(i)+19]!=65 && !(fboard->boccupy & 1ULL << (-15+63-i)) ) MoveAndDo(fboard,63-i,-15+63-i);
+					if(BigTable[BitToBig(i)+8]!=65  && !(fboard->boccupy & 1ULL << (-6+63-i)) ) MoveAndDo(fboard,63-i,-6+63-i);
+				}
+				if(fboard->bb & (1ULL << (63 - i)) || fboard->bq & (1ULL << (63 - i))){ // there is a if not else if cuz to check queen (queen= rook + bishop)
+					//there are a black bishop	
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*1-10*j]!=65 && (fboard->occupy & 1ULL << (-1*j+8*j+63-i))) MoveAndDo(fboard,63-i,-1*j+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*1-10*j]!=65 && (fboard->woccupy & 1ULL << (-1*j+8*j+63-i))) MoveAndDo(fboard,63-i,-1*j+8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-1-10*j]!=65 && (fboard->occupy & 1ULL << (+1*j+8*j+63-i))) MoveAndDo(fboard,63-i,+1*j+8*j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-1-10*j]!=65 && (fboard->woccupy & 1ULL << (+1*j+8*j+63-i))) MoveAndDo(fboard,63-i,+1*j+8*j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*10-j]!=65 && (fboard->occupy & 1ULL << (-8*j+j+63-i))) MoveAndDo(fboard,63-i,-8*j+j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*10-j]!=65 && (fboard->woccupy & 1ULL << (-8*j+j+63-i))) MoveAndDo(fboard,63-i,-8*j+j+63-i);
+							break;
+						}
+					}
+					for(int j=0; j<8;j++){
+						if(BigTable[BitToBig((i))+j*-10+j]!=65 && (fboard->occupy & 1ULL << (+8*j-j+63-i))) MoveAndDo(fboard,63-i,+8*j-j+63-i);
+						else{	
+							if(BigTable[BitToBig((i))+j*-10+j]!=65 && (fboard->woccupy & 1ULL << (+8*j-j+63-i))) MoveAndDo(fboard,63-i,+8*j-j+63-i);
+							break;
+						}
+					}
+					//end of bishop
+				}
+				else if(fboard->bk & (1ULL << (63 - i))){
+					//there are a black king
+					if(BigTable[BitToBig(i)-11]!=65 && !(fboard->boccupy & 1ULL << (9+63-i))) MoveAndDo(fboard, 63-i, 9+63-i);
+					if(BigTable[BitToBig(i)-10]!=65 && !(fboard->boccupy & 1ULL << (8+63-i))) MoveAndDo(fboard, 63-i, 8+63-i);
+					if(BigTable[BitToBig(i)-9]!=65  && !(fboard->boccupy & 1ULL << (7+63-i))) MoveAndDo(fboard, 63-i, 7+63-i);
+					if(BigTable[BitToBig(i)-1]!=65  && !(fboard->boccupy & 1ULL << (1+63-i))) MoveAndDo(fboard, 63-i, 1+63-i);
+					if(BigTable[BitToBig(i)+1]!=65  && !(fboard->boccupy & 1ULL << (-1+63-i))) MoveAndDo(fboard, 63-i, -1+63-i);
+					if(BigTable[BitToBig(i)+11]!=65 && !(fboard->boccupy & 1ULL << (-9+63-i))) MoveAndDo(fboard, 63-i, -9+63-i);
+					if(BigTable[BitToBig(i)+10]!=65 && !(fboard->boccupy & 1ULL << (-8+63-i))) MoveAndDo(fboard, 63-i, -8+63-i);
+					if(BigTable[BitToBig(i)+9]!=65  && !(fboard->boccupy & 1ULL << (-7+63-i))) MoveAndDo(fboard, 63-i, -7+63-i);
+				}
+			}
+		}
+
+	}
+}
 
 
 
