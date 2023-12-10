@@ -5,6 +5,7 @@
 #define StartFen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define PiecesNames	"rnbqkpRNBQKP"
 
+#define PiecesValues	{0, 100, 325, 325, 550, 1000, 50000}
 //
 // 8 _1000 highest	black 
 // 7 _0000
@@ -18,6 +19,9 @@ typedef unsigned short int u16;
 
 struct board{
 	u64 occupy;
+	
+	u64 woccupy;
+	u64 boccupy;
 
 	u64 wp;
 	u64 wr;
@@ -33,7 +37,7 @@ struct board{
 	u64 bq;
 	u64 bk;
 
-	u16 side;
+	u16 side; // 1 white 0 black
 
 	u16 castle; //  0000 0000 1111 black long castle short castle white long castle short castle
 	u16 fifty;
@@ -43,6 +47,11 @@ struct board{
 	//note he defined a plist[13][10] that shows position of picies
 };
 
+struct node{
+	struct board* BoardPtrArray[50];
+	int BoardPtrArraySize;
+
+};
 int BigTable[BigTableSqNum];
 
 
