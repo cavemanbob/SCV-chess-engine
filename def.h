@@ -18,6 +18,9 @@ typedef unsigned int u32;
 typedef unsigned short int u16;
 
 struct board{
+	struct board* BoardPtrArray[200];
+	u16 BoardPtrArraySize;
+	
 	u64 occupy;
 	
 	u64 woccupy;
@@ -49,11 +52,12 @@ struct board{
 
 struct node{
 	struct board* BoardPtrArray[50];
-	int BoardPtrArraySize;
+	u16 BoardPtrArraySize;
+	struct node* NodePtrArray[50];
+	u16 NodePtrArraySize;
 
 };
 int BigTable[BigTableSqNum];
-
 
 
 
