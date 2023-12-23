@@ -289,10 +289,10 @@ void ReadableBoard(struct board* fboard){
 	printf("\n   a  b  c  d  e  f  g  h\n");
 }
 void PrintTree(struct board *fboard, int deep){
-	printf("%d",fboard->BoardPtrArraySize);
+//	printf("%d",fboard->BoardPtrArraySize);
 	if(fboard->BoardPtrArraySize!=0){
 		for(int i=0; i<fboard->BoardPtrArraySize; i++){
-//			ReadableBoard(fboard->BoardPtrArray[i]);
+			ReadableBoard(fboard->BoardPtrArray[i]);
 //			printf("\n%3d",i);
 			PrintTree(fboard->BoardPtrArray[i], deep+1);
 		}
@@ -305,13 +305,14 @@ void Nodeloop(struct board* lboard, int deep){
 //	printf("Node in board is %d:\n",deep);
 //	ReadableBoard(lboard);
 	if(deep>0){
+		printf("lboard before: %d  ",lboard->BoardPtrArraySize);
 		MoveGen(lboard);
 //		printf("Compilated\n");
-		for(int i=0; i<lboard->BoardPtrArraySize; i++){
+/*		for(int i=0; i<lboard->BoardPtrArraySize; i++){
 			struct board inboard= *(lboard->BoardPtrArray[i]);
 			ReadableBoard(&inboard);
-		}
-//		printf("lboard: %d\n",lboard->BoardPtrArraySize);
+		}*/
+		printf("after: %d\n",lboard->BoardPtrArraySize);
 		for(int i=0; i<lboard->BoardPtrArraySize; i++){
 			Nodeloop(lboard->BoardPtrArray[i], deep-1);
 		}
@@ -335,6 +336,8 @@ void MoveAndDo(int from, int to, char PieceType, struct board* CNodePtr){
 	
 	struct board* fboard = (struct board*) malloc(sizeof(struct board));
 	*fboard = *CNodePtr;
+	memset(fboard->BoardPtrArray,0,sizeof(fboard->BoardPtrArray));
+	fboard->BoardPtrArraySize=0;
 
 	fboard->occupy ^= 1ULL << from;
 	fboard->occupy |= 1ULL << to;
@@ -412,7 +415,7 @@ void MoveGen(struct board* Ptrfboard){ //Its looking like true for White  but wh
 	struct board fboard= *Ptrfboard;
 	// search move for white
 	if(fboard.side == 1){
-		printf("Search for white\n");
+	//	printf("Search for white\n");
 		for(int i=0; i<64; i++){
 			if(fboard.woccupy & (1ULL << (63 - i))){
 				// There are a white piece at 63-i
@@ -542,7 +545,7 @@ void MoveGen(struct board* Ptrfboard){ //Its looking like true for White  but wh
 	}
 	// search move for black
 	else{
-		printf("Search for black\n");
+//		printf("Search for black\n");
 		for(int i=0; i<64; i++){
 			if(fboard.boccupy & (1ULL << (63 - i))){
 				// There are a white piece at 63-i
