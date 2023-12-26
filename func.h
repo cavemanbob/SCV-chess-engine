@@ -1,9 +1,9 @@
+#pragma once
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "def.h"
-
 
 // Name of function cuz of A BUNCH OF LOOP BETWEEN FUNCTIONS
 
@@ -27,6 +27,7 @@ void PrintMove(int from, int to);
 
 
 
+#include "search.h"
 
 
 
@@ -90,10 +91,7 @@ void ResetBoard(struct board* resboard){
 
 void ApplyFen(const char* fen, struct board* LocalBoard){
 	int i=0;
-//	ResetBoard(LocalBoard); //bugg
-//	memset(&LocalBoard, 0, sizeof(&LocalBoard)); // clear LocalBoard
 	while(1){
-//		printf("br: %llu\n",LocalBoard->br);
 		if(*fen=='/'){fen++;continue;}
 		if(*fen==' ')break;
 		switch(*fen){
@@ -289,30 +287,152 @@ void ReadableBoard(struct board* fboard){
 	printf("\n   a  b  c  d  e  f  g  h\n");
 }
 void PrintTree(struct board *fboard, int deep){
-//	printf("%d",fboard->BoardPtrArraySize);
 	if(fboard->BoardPtrArraySize!=0){
 		for(int i=0; i<fboard->BoardPtrArraySize; i++){
 			ReadableBoard(fboard->BoardPtrArray[i]);
-//			printf("\n%3d",i);
 			PrintTree(fboard->BoardPtrArray[i], deep+1);
 		}
 	}
 	return;
 }
+void HumanMove(struct board **hboard, char ar[], int c1, int c2){
+	struct board *mboard= *hboard;
+	struct board* fboard= (struct board *)malloc(sizeof(struct board));
+	*fboard= *mboard;
+	int from= (c1-1) * 8;
+	switch(ar[0]){
+		case 'h':
+			from+=0;
+			break;
+		case 'g':
+			from+=1;
+			break;
+		case 'f':
+			from+=2;
+			break;
+		case 'e':
+			from+=3;
+			break;
+		case 'd':
+			from+=4;
+			break;
+		case 'c':
+			from+=5;
+			break;
+		case 'b':
+			from+=6;
+			break;
+		case 'a':
+			from+=7;
+			break;
+	}
+	int to= (c2-1) * 8;
+	switch(ar[1]){
+		case 'h':
+			to+=0;
+			break;
+		case 'g':
+			to+=1;
+			break;
+		case 'f':
+			to+=2;
+			break;
+		case 'e':
+			to+=3;
+			break;
+		case 'd':
+			to+=4;
+			break;
+		case 'c':
+			to+=5;
+			break;
+		case 'b':
+			to+=6;
+			break;
+		case 'a':
+			to+=7;
+			break;
+	}
+	if(BitCheck(fboard->bp, from)){
+		fboard->bp ^= 1ULL << from;
+		fboard->bp ^= 1ULL << to;
+	}
+	else if(BitCheck(fboard->br, from)){
+		fboard->br ^= 1ULL << from;
+		fboard->br ^= 1ULL << to;
+	}
+	else if(BitCheck(fboard->bh, from)){
+		fboard->bh ^= 1ULL << from;
+		fboard->bh ^= 1ULL << to;
+	}
+	else if(BitCheck(fboard->bb, from)){
+		fboard->bb ^= 1ULL << from;
+		fboard->bb ^= 1ULL << to;
+	}
+	else if(BitCheck(fboard->bq, from)){
+		fboard->bq ^= 1ULL << from;
+		fboard->bq ^= 1ULL << to;
+	}
+	else if(BitCheck(fboard->bk, from)){
+		fboard->bk ^= 1ULL << from;
+		fboard->bk ^= 1ULL << to;
+	}
+	
+	fboard->boccupy ^= 1ULL << from;
+	fboard->boccupy ^= 1ULL << to;
+	
+	fboard->occupy ^= 1ULL << from;
+	if(!BitCheck(fboard->occupy, to)){
+		fboard->occupy ^= 1ULL << to;
+	}
+	if(BitCheck(fboard->woccupy, to)){
+		fboard->woccupy ^= 1ULL << to;
+	}
+
+	printf("IN>\n");
+	ReadableBoard(fboard);
+	for(int i=0;i<mboard->BoardPtrArraySize;i++){
+//		ReadableBoard(mboard->BoardPtrArray[i]);
+		if(mboard->BoardPtrArray[i]->occupy == fboard->occupy && mboard->BoardPtrArray[i]->boccupy == fboard->boccupy && mboard->BoardPtrArray[i]->woccupy == fboard->woccupy){
+			*hboard = mboard->BoardPtrArray[i];
+			printf("MATCHED");
+			return;
+		}
+		else if(i==11){
+			printf("M1\n");
+			PrintBitBoard(mboard->BoardPtrArray[i]->occupy );
+			printf("M2\n");
+			PrintBitBoard(fboard->occupy);
+			printf("M3\n");
+			PrintBitBoard(mboard->BoardPtrArray[i]->boccupy );
+			printf("M4\n");
+			PrintBitBoard(fboard->boccupy);
+			printf("M5\n");
+			PrintBitBoard(mboard->BoardPtrArray[i]->woccupy );
+			printf("M6\n");
+			PrintBitBoard(fboard->woccupy);
+			ReadableBoard(fboard);
+		}
+	}
+	printf("ERROR\n");
+	assert(0);
+}
+
+
 
 void Nodeloop(struct board* lboard, int deep){
 //	printf("%d\n",lboard->BoardPtrArraySize);
 //	printf("Node in board is %d:\n",deep);
 //	ReadableBoard(lboard);
 	if(deep>0){
-		printf("lboard before: %d  ",lboard->BoardPtrArraySize);
+//		printf("lboard before: %d  ",lboard->BoardPtrArraySize);
 		MoveGen(lboard);
 //		printf("Compilated\n");
 /*		for(int i=0; i<lboard->BoardPtrArraySize; i++){
 			struct board inboard= *(lboard->BoardPtrArray[i]);
 			ReadableBoard(&inboard);
 		}*/
-		printf("after: %d\n",lboard->BoardPtrArraySize);
+//		printf("after: %d\n",lboard->BoardPtrArraySize);
 		for(int i=0; i<lboard->BoardPtrArraySize; i++){
 			Nodeloop(lboard->BoardPtrArray[i], deep-1);
 		}
@@ -320,12 +440,41 @@ void Nodeloop(struct board* lboard, int deep){
 }
 
 struct board* CreateTreeNode(){
-	struct board* StartBoard= (struct board *)calloc(1,sizeof(struct board)); // Clean board created
-//	ApplyFen("r3kb1r/p1p4p/1pn1Nnp1/3p2q1/P1P3R1/1QNPBp1p/1P2P3/R3KN1R w - - 0 1", StartBoard);
-	ApplyFen(StartFen, StartBoard);
-	ReadableBoard(StartBoard);  //debug line
-	Nodeloop(StartBoard,2);
-	return StartBoard;
+	struct board* CurrentBoard= (struct board *)calloc(1,sizeof(struct board)); // Clean board created
+//	ApplyFen("7n/8/3p4/8/P7/8/7R/8 w - - 0 1", StartBoard);
+	ApplyFen(StartFen, CurrentBoard);
+	printf("\n\n");
+//	Nodeloop(StartBoard,2);
+	char hmove[2];
+	int c1, c2;
+	while(1){
+		if(CurrentBoard->BoardPtrArraySize == 0)
+			MoveGen(CurrentBoard); // Dont Delete Old Version Of MoveGENS
+		int cmax=-80000;
+		printf("Values:\n");
+		for(int i=0;i<CurrentBoard->BoardPtrArraySize;i++){
+			printf("%d-",CurrentBoard->BoardPtrArray[i]->val);
+			CurrentBoard->BoardPtrArray[i]->val=alphabeta(CurrentBoard->BoardPtrArray[i], MAXDEPTH, -80000, 80000, 1);
+			printf("%d  ",CurrentBoard->BoardPtrArray[i]->val);
+			if(cmax < CurrentBoard->BoardPtrArray[i]->val) cmax = CurrentBoard->BoardPtrArray[i]->val;
+		}
+		printf("\n");
+		for(int i=0;i<CurrentBoard->BoardPtrArraySize;i++){
+			if(cmax == CurrentBoard->BoardPtrArray[i]->val) CurrentBoard=CurrentBoard->BoardPtrArray[i];
+		}
+		printf("PC TURN>\n");
+		ReadableBoard(CurrentBoard);
+		printf("\n----->%d",CurrentBoard->BoardPtrArraySize);
+		scanf("%c",hmove);
+		scanf("%d",&c1);
+		scanf("%c",hmove+1);
+		scanf("%d",&c2);
+		HumanMove(&CurrentBoard,hmove,c1,c2);
+		printf("HUMAN TURN>\n");
+		ReadableBoard(CurrentBoard);
+
+	}
+	return CurrentBoard;
 }
 void MoveAndDo(int from, int to, char PieceType, struct board* CNodePtr){
 //	printf("MoveAndDo\n");
@@ -341,6 +490,7 @@ void MoveAndDo(int from, int to, char PieceType, struct board* CNodePtr){
 
 	fboard->occupy ^= 1ULL << from;
 	fboard->occupy |= 1ULL << to;
+
 	if(fboard->side==1){
 		fboard->woccupy ^= 1ULL << from;
 		fboard->woccupy |= 1ULL << to;
@@ -369,7 +519,29 @@ void MoveAndDo(int from, int to, char PieceType, struct board* CNodePtr){
 				fboard->wk ^= 1ULL << from;
 				fboard->wk |= 1ULL << to;
 				break;
-		}		
+		}
+		if(BitCheck(fboard->bp, to)){
+			fboard->bp ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->br, to)){
+			fboard->br ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->bh, to)){
+			fboard->bh ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->bb, to)){
+			fboard->bb ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->bq, to)){
+			fboard->bq ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->bk, to)){
+			fboard->bk ^= 1ULL << to;
+		}
+		if(BitCheck(fboard->boccupy, to)){
+			fboard->boccupy ^= 1ULL << to;
+		}
+		
 	}
 	else{
 		fboard->boccupy ^= 1ULL << from;
@@ -399,8 +571,33 @@ void MoveAndDo(int from, int to, char PieceType, struct board* CNodePtr){
 				fboard->bk ^= 1ULL << from;
 				fboard->bk |= 1ULL << to;
 				break;
+		}
+		if(BitCheck(fboard->wp, to)){
+			fboard->wp ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->wr, to)){
+			fboard->wr ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->wh, to)){
+			fboard->wh ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->wb, to)){
+			fboard->wb ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->wq, to)){
+			fboard->wq ^= 1ULL << to;
+		}
+		else if(BitCheck(fboard->wk, to)){
+			fboard->wk ^= 1ULL << to;
 		}	
+		if(BitCheck(fboard->woccupy, to)){
+			fboard->woccupy ^= 1ULL << to;
+		}
+
 	}
+
+	
+
 	// Add branch to array
 	fboard->side = fboard->side==0ULL ? 1ULL : 0ULL; // for min max
 	CNodePtr->BoardPtrArray[CNodePtr->BoardPtrArraySize]= fboard;

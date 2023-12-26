@@ -1,10 +1,10 @@
+#pragma once
 
 #define BigTableSqNum 120
 #define BitBoardSqNum 64
 
 #define StartFen "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 #define PiecesNames	"rnbqkpRNBQKP"
-
 #define PiecesValues	{0, 100, 325, 325, 550, 1000, 50000}
 //
 // 8 _1000 highest	black 
@@ -13,14 +13,17 @@
 //		abcd
 //
 
+#define MAXDEPTH 5
+
 typedef unsigned long long int u64;
 typedef unsigned int u32;
 typedef unsigned short int u16;
 
 struct board{
-	struct board* BoardPtrArray[200];
+	struct board* BoardPtrArray[300];
 	u16 BoardPtrArraySize;
-	
+	float val;
+
 	u64 occupy;
 	
 	u64 woccupy;

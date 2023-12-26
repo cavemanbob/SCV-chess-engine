@@ -1,5 +1,5 @@
 #include "func.h"
-
+#include <stdio.h>
 void StartConfig(){
 	SetBigTable();
 }
@@ -24,11 +24,12 @@ int main(){
 /*	for(int i=x->BoardPtrArraySize;i>=0;i--){
 		ReadableBoard(x);
 	}*/
+
 //	PrintTree(x,0);
 //	printf("\n->%d",x->BoardPtrArraySize);
 //	printf("\n->%d",x->BoardPtrArray[0]->BoardPtrArraySize);
 
 
-	printf("\n\nsucess\n");
+//	printf("\n\nsucess\n");
 	return 0;
 };
